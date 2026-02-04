@@ -131,14 +131,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         for (pubkey, (fingerprint, path)) in &psbt.inputs[input_index].bip32_derivation {
             let fp_str = fingerprint.to_string();
             if fp_str == my_fingerprint {
-                println!("    ✓ Found our key! Path: {}", path);
+                println!("    [OK] Found our key! Path: {}", path);
                 found_key = Some((pubkey.clone(), path.clone()));
                 break;
             }
         }
 
         let Some((target_pubkey, derivation_path)) = found_key else {
-            println!("    ✗ No key for our fingerprint, skipping");
+            println!("    [X] No key for our fingerprint, skipping");
             continue;
         };
 
@@ -161,11 +161,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let derived_pubkey = bitcoin::PublicKey::new(derived_secp_pubkey);
         
         if derived_secp_pubkey != target_pubkey {
-            println!("    ✗ Derived key mismatch! Skipping.");
+            println!("    [X] Derived key mismatch! Skipping.");
             continue;
         }
         
-        println!("    ✓ Key derived and verified");
+        println!("    [OK] Key derived and verified");
 
         // Get the witness script for sighash computation
         let witness_script = psbt.inputs[input_index]
@@ -189,7 +189,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             EcdsaSighashType::All,
         )?;
 
-        println!("    ✓ Sighash computed: {}...", &sighash.to_string()[..16]);
+        println!("    [OK] Sighash computed: {}...", &sighash.to_string()[..16]);
 
         // Create the ECDSA signature
         let message = Message::from_digest(*sighash.as_byte_array());
@@ -204,7 +204,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ecdsa_sig,
         );
         
-        println!("    ✓ Signature added to PSBT");
+        println!("    [OK] Signature added to PSBT");
         signed_count += 1;
     }
 
@@ -230,7 +230,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     if total_sigs >= 2 {
         println!("───────────────────────────────────────────────────────────────");
-        println!("  ✓ Threshold reached! ({}/2 signatures)", total_sigs);
+        println!("  [OK] Threshold reached! ({}/2 signatures)", total_sigs);
         println!("  Ready to finalize with: cargo run --bin finalizer -- <psbt>");
         println!("───────────────────────────────────────────────────────────────");
     } else {
@@ -243,7 +243,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Save signed PSBT
     let output_name = format!("signed_by_{}.psbt.base64", key_data.name);
     std::fs::write(&output_name, &signed_psbt_base64)?;
-    println!("\n  ✓ Saved to: {}\n", output_name);
+    println!("\n  [OK] Saved to: {}\n", output_name);
 
     Ok(())
 }

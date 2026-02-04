@@ -103,8 +103,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut file = File::create(&filename)?;
         file.write_all(json.as_bytes())?;
 
-        println!("  ✓ Fingerprint: {}", master_fingerprint);
-        println!("  ✓ Saved to: {}", filename);
+        println!("  [OK] Fingerprint: {}", master_fingerprint);
+        println!("  [OK] Saved to: {}", filename);
         println!();
     }
 

@@ -138,12 +138,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Add witness UTXO (amount + script) - critical for signature verification
     psbt.inputs[0].witness_utxo = Some(simulated_utxo.clone());
-    println!("  ✓ Added witness_utxo (amount + script)");
+    println!("  [OK] Added witness_utxo (amount + script)");
 
     // Add witness script (the actual 2-of-3 multisig script)
     let witness_script = wallet.witness_script(receive_index)?;
     psbt.inputs[0].witness_script = Some(witness_script.clone());
-    println!("  ✓ Added witness_script (OP_2 <keys> OP_3 OP_CHECKMULTISIG)");
+    println!("  [OK] Added witness_script (OP_2 <keys> OP_3 OP_CHECKMULTISIG)");
 
     // Add BIP 32 derivation paths for each signer
     // This tells each signer how to derive their signing key
@@ -167,7 +167,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             (origin.fingerprint, full_derivation),
         );
         
-        println!("  ✓ Added derivation for [{}]", origin.fingerprint);
+        println!("  [OK] Added derivation for [{}]", origin.fingerprint);
     }
 
     // Serialize to base64 for transport
@@ -193,10 +193,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Save PSBT to file for easy testing
     std::fs::write("unsigned.psbt", psbt.serialize())?;
-    println!("\n  ✓ Saved binary PSBT to: unsigned.psbt");
+    println!("\n  [OK] Saved binary PSBT to: unsigned.psbt");
     
     std::fs::write("unsigned.psbt.base64", &psbt_base64)?;
-    println!("  ✓ Saved base64 PSBT to: unsigned.psbt.base64\n");
+    println!("  [OK] Saved base64 PSBT to: unsigned.psbt.base64\n");
 
     Ok(())
 }

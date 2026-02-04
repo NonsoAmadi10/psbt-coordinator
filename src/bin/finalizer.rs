@@ -67,13 +67,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         
         if sig_count < 2 {
-            eprintln!("\n  ✗ ERROR: Input {} has insufficient signatures ({}/2)", i, sig_count);
+            eprintln!("\n  [X] ERROR: Input {} has insufficient signatures ({}/2)", i, sig_count);
             eprintln!("    Need at least 2 signatures for 2-of-3 multisig.");
             std::process::exit(1);
         }
     }
     
-    println!("\n  ✓ All inputs have sufficient signatures");
+    println!("\n  [OK] All inputs have sufficient signatures");
 
     // Step 3: Finalize the PSBT
     println!("\n[3/4] Finalizing PSBT...\n");
@@ -81,7 +81,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Use miniscript to finalize (handles witness construction automatically)
     let finalized_psbt = finalize_psbt(psbt)?;
     
-    println!("  ✓ PSBT finalized");
+    println!("  [OK] PSBT finalized");
 
     // Step 4: Extract the final transaction
     println!("\n[4/4] Extracting signed transaction...\n");
@@ -114,7 +114,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Save transaction
     std::fs::write("final_tx.hex", &tx_hex)?;
-    println!("\n  ✓ Saved to: final_tx.hex\n");
+    println!("\n  [OK] Saved to: final_tx.hex\n");
 
     Ok(())
 }

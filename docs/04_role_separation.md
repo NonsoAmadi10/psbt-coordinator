@@ -363,17 +363,17 @@ In production, the Coordinator is typically:
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  Coordinator trusts:                                            │
-│    ✗ Nobody - it has no secrets                                │
+│    NO Nobody - it has no secrets                                │
 │                                                                 │
 │  Signers trust:                                                 │
-│    ✗ Not the Coordinator (verify everything)                   │
-│    ✗ Not other Signers (don't share keys)                      │
-│    ✓ Only themselves (their own verification)                  │
+│    NO Not the Coordinator (verify everything)                   │
+│    NO Not other Signers (don't share keys)                      │
+│    YES Only themselves (their own verification)                  │
 │                                                                 │
 │  The System trusts:                                             │
-│    ✓ Math (ECDSA, SHA256, secp256k1)                           │
-│    ✓ Protocol (Bitcoin consensus rules)                        │
-│    ✓ That attackers can't compromise M signers                 │
+│    YES Math (ECDSA, SHA256, secp256k1)                           │
+│    YES Protocol (Bitcoin consensus rules)                        │
+│    YES That attackers can't compromise M signers                 │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
