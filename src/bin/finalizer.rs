@@ -157,11 +157,11 @@ fn finalize_psbt(mut psbt: Psbt) -> Result<Psbt, Box<dyn std::error::Error>> {
         // Set the final witness
         psbt.inputs[input_index].final_script_witness = Some(witness);
         
-        // Clear out the fields that are no longer needed
+        // Clear out the fields that are no longer needed (but keep witness_utxo for vsize calc)
         psbt.inputs[input_index].partial_sigs.clear();
         psbt.inputs[input_index].bip32_derivation.clear();
         psbt.inputs[input_index].witness_script = None;
-        psbt.inputs[input_index].witness_utxo = None;
+        // Note: We keep witness_utxo for extract_tx to work correctly
     }
     
     Ok(psbt)

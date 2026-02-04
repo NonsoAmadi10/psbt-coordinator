@@ -156,11 +156,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let child_pubkey = child_xpub.public_key;
         
         // Build full derivation path: origin_path / address_index
-        let full_path = format!("{}/{}", 
-            origin.derivation_path.to_string().strip_prefix("m").unwrap_or(&origin.derivation_path.to_string()),
-            receive_index
-        );
-        let full_derivation = DerivationPath::from_str(&format!("m{}", full_path))?;
+        // origin.derivation_path is already m/48'/1'/0'/2', we need m/48'/1'/0'/2'/0
+        let origin_str = origin.derivation_path.to_string();
+        let full_path_str = format!("{}/{}", origin_str, receive_index);
+        let full_derivation = DerivationPath::from_str(&full_path_str)?;
         
         // Add to PSBT
         psbt.inputs[0].bip32_derivation.insert(

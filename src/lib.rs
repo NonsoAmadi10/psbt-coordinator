@@ -86,9 +86,9 @@ impl MultisigWallet {
             });
 
             // Build descriptor string component
-            // Format: [fingerprint/path]xpub
+            // Format: [fingerprint/path]xpub/*
             descriptor_parts.push(format!(
-                "[{}/{}]{}",
+                "[{}/{}]{}/*",
                 key_data.fingerprint,
                 // Remove 'm/' prefix for descriptor format
                 key_data.derivation_path.strip_prefix("m/").unwrap_or(&key_data.derivation_path),
