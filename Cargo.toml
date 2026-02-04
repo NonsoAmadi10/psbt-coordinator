@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+base64 = "0.22"
 bitcoin = { version = "0.32.8", features = ["rand-std"] }
 miniscript = "13.0.0"
 rand = "0.8"
