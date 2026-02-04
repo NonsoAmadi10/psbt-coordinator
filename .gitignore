@@ -36,6 +36,11 @@ go.work.sum
 
 /target
 
+# PSBT workflow files (generated at runtime)
+*.psbt
+*.psbt.base64
+final_tx.hex
+
 
 # Added by cargo
 #
