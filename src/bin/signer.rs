@@ -1,6 +1,6 @@
 //! Signs PSBTs using a single key from the multisig set.
 
-use base64::{engine::general_purpose::STANDARD, Engine};
+use base64::{Engine, engine::general_purpose::STANDARD};
 use bitcoin::bip32::{DerivationPath, Xpriv};
 use bitcoin::ecdsa::Signature as EcdsaSignature;
 use bitcoin::hashes::Hash;
@@ -41,14 +41,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let child_path = DerivationPath::from_str(&format!("m/{}", child_idx))?;
         let privkey = xprv.derive_priv(&secp, &child_path)?;
 
-        let derived_pub = bitcoin::secp256k1::PublicKey::from_secret_key(&secp, &privkey.private_key);
+        let derived_pub =
+            bitcoin::secp256k1::PublicKey::from_secret_key(&secp, &privkey.private_key);
         if derived_pub != pubkey {
             eprintln!("  Input {}: key mismatch, skipping", idx);
             continue;
         }
 
-        let script = psbt.inputs[idx].witness_script.as_ref().ok_or("no witness script")?;
-        let value = psbt.inputs[idx].witness_utxo.as_ref().ok_or("no witness utxo")?.value;
+        let script = psbt.inputs[idx]
+            .witness_script
+            .as_ref()
+            .ok_or("no witness script")?;
+        let value = psbt.inputs[idx]
+            .witness_utxo
+            .as_ref()
+            .ok_or("no witness utxo")?
+            .value;
 
         let mut cache = SighashCache::new(&tx);
         let sighash = cache.p2wsh_signature_hash(idx, script, value, EcdsaSighashType::All)?;
@@ -68,11 +76,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let out_file = format!("signed_by_{}.psbt.base64", key_data.name);
     std::fs::write(&out_file, STANDARD.encode(psbt.serialize()))?;
 
-    println!("\nSigned {} input(s), total signatures: {}/2", signed, total_sigs);
+    println!(
+        "\nSigned {} input(s), total signatures: {}/3",
+        signed, total_sigs
+    );
     println!("Output: {}", out_file);
 
-    if total_sigs >= 2 {
-        println!("\nThreshold met. Run: cargo run --bin finalizer -- {}", out_file);
+    if total_sigs >= 3 {
+        println!(
+            "\nThreshold met. Run: cargo run --bin finalizer -- {}",
+            out_file
+        );
     }
 
     Ok(())
@@ -88,7 +102,10 @@ fn load_psbt(input: &str) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     }
 }
 
-fn find_our_key(input: &bitcoin::psbt::Input, fp: &str) -> Option<(bitcoin::secp256k1::PublicKey, DerivationPath)> {
+fn find_our_key(
+    input: &bitcoin::psbt::Input,
+    fp: &str,
+) -> Option<(bitcoin::secp256k1::PublicKey, DerivationPath)> {
     for (pk, (fingerprint, path)) in &input.bip32_derivation {
         if fingerprint.to_string() == fp {
             return Some((*pk, path.clone()));
@@ -98,13 +115,24 @@ fn find_our_key(input: &bitcoin::psbt::Input, fp: &str) -> Option<(bitcoin::secp
 }
 
 fn print_tx_summary(psbt: &Psbt) {
-    let total_in: u64 = psbt.inputs.iter()
+    let total_in: u64 = psbt
+        .inputs
+        .iter()
         .filter_map(|i| i.witness_utxo.as_ref())
         .map(|u| u.value.to_sat())
         .sum();
-    let total_out: u64 = psbt.unsigned_tx.output.iter().map(|o| o.value.to_sat()).sum();
+    let total_out: u64 = psbt
+        .unsigned_tx
+        .output
+        .iter()
+        .map(|o| o.value.to_sat())
+        .sum();
 
-    println!("\nTransaction: {} input(s), {} output(s)", psbt.inputs.len(), psbt.unsigned_tx.output.len());
+    println!(
+        "\nTransaction: {} input(s), {} output(s)",
+        psbt.inputs.len(),
+        psbt.unsigned_tx.output.len()
+    );
     println!("  Total in:  {} sat", total_in);
     println!("  Total out: {} sat", total_out);
     println!("  Fee:       {} sat\n", total_in.saturating_sub(total_out));

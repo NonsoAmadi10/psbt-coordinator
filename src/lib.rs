@@ -32,9 +32,12 @@ pub struct MultisigWallet {
 }
 
 impl MultisigWallet {
-    pub fn from_key_files(key_paths: &[&str], network: Network) -> Result<Self, Box<dyn std::error::Error>> {
-        if key_paths.len() != 3 {
-            return Err("expected 3 key files".into());
+    pub fn from_key_files(
+        key_paths: &[&str],
+        network: Network,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        if key_paths.len() != 5 {
+            return Err("expected 5 key files".into());
         }
 
         let mut xpub_origins = Vec::new();
@@ -46,19 +49,38 @@ impl MultisigWallet {
             let fingerprint = Fingerprint::from_str(&data.fingerprint)?;
             let derivation_path = DerivationPath::from_str(&data.derivation_path)?;
 
-            xpub_origins.push(XpubOrigin { xpub, fingerprint, derivation_path });
+            xpub_origins.push(XpubOrigin {
+                xpub,
+                fingerprint,
+                derivation_path,
+            });
 
-            let path_suffix = data.derivation_path.strip_prefix("m/").unwrap_or(&data.derivation_path);
-            descriptor_parts.push(format!("[{}/{}]{}/*", data.fingerprint, path_suffix, data.xpub));
+            let path_suffix = data
+                .derivation_path
+                .strip_prefix("m/")
+                .unwrap_or(&data.derivation_path);
+            descriptor_parts.push(format!(
+                "[{}/{}]{}/*",
+                data.fingerprint, path_suffix, data.xpub
+            ));
         }
 
         let descriptor_str = format!(
-            "wsh(sortedmulti(2,{},{},{}))",
-            descriptor_parts[0], descriptor_parts[1], descriptor_parts[2]
+            "wsh(sortedmulti(3,{},{},{},{},{}))",
+            descriptor_parts[0],
+            descriptor_parts[1],
+            descriptor_parts[2],
+            descriptor_parts[3],
+            descriptor_parts[4]
         );
         let descriptor = Descriptor::<DescriptorPublicKey>::from_str(&descriptor_str)?;
 
-        Ok(Self { descriptor, network, threshold: 2, xpub_origins })
+        Ok(Self {
+            descriptor,
+            network,
+            threshold: 3,
+            xpub_origins,
+        })
     }
 
     pub fn derive_address(&self, index: u32) -> Result<Address, Box<dyn std::error::Error>> {
@@ -76,7 +98,11 @@ impl MultisigWallet {
         }
     }
 
-    pub fn derive_child_pubkey(&self, origin: &XpubOrigin, index: u32) -> Result<bitcoin::secp256k1::PublicKey, Box<dyn std::error::Error>> {
+    pub fn derive_child_pubkey(
+        &self,
+        origin: &XpubOrigin,
+        index: u32,
+    ) -> Result<bitcoin::secp256k1::PublicKey, Box<dyn std::error::Error>> {
         let secp = Secp256k1::new();
         let child_path = DerivationPath::from_str(&format!("m/{}", index))?;
         let child_xpub = origin.xpub.derive_pub(&secp, &child_path)?;
@@ -86,10 +112,19 @@ impl MultisigWallet {
 
 pub fn print_wallet_info(wallet: &MultisigWallet) {
     println!("Network: {:?}", wallet.network);
-    println!("Threshold: {}-of-{}", wallet.threshold, wallet.xpub_origins.len());
+    println!(
+        "Threshold: {}-of-{}",
+        wallet.threshold,
+        wallet.xpub_origins.len()
+    );
     println!();
     for (i, origin) in wallet.xpub_origins.iter().enumerate() {
-        println!("Signer {}: [{}] {}", i + 1, origin.fingerprint, &origin.xpub.to_string()[..24]);
+        println!(
+            "Signer {}: [{}] {}",
+            i + 1,
+            origin.fingerprint,
+            &origin.xpub.to_string()[..24]
+        );
     }
     println!();
     println!("Descriptor: {}", wallet.descriptor);

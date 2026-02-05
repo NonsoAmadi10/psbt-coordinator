@@ -1,9 +1,9 @@
 //! Finalizes PSBTs and extracts broadcast-ready transactions.
 
-use base64::{engine::general_purpose::STANDARD, Engine};
+use base64::{Engine, engine::general_purpose::STANDARD};
+use bitcoin::Witness;
 use bitcoin::consensus::encode;
 use bitcoin::psbt::Psbt;
-use bitcoin::Witness;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = std::env::args().collect();
@@ -18,8 +18,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Verify sufficient signatures
     for (i, input) in psbt.inputs.iter().enumerate() {
         let sigs = input.partial_sigs.len();
-        if sigs < 2 {
-            eprintln!("Input {}: only {}/2 signatures", i, sigs);
+        if sigs < 3 {
+            eprintln!("Input {}: only {}/3 signatures", i, sigs);
             std::process::exit(1);
         }
         println!("Input {}: {} signatures", i, sigs);
@@ -28,16 +28,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Finalize each input
     for idx in 0..psbt.inputs.len() {
         let input = &psbt.inputs[idx];
-        let script = input.witness_script.as_ref().ok_or("missing witness script")?.clone();
+        let script = input
+            .witness_script
+            .as_ref()
+            .ok_or("missing witness script")?
+            .clone();
 
         // Sort sigs by pubkey for sortedmulti
         let mut sigs: Vec<_> = input.partial_sigs.iter().collect();
         sigs.sort_by(|a, b| a.0.inner.serialize().cmp(&b.0.inner.serialize()));
 
-        // Build witness: <empty> <sig1> <sig2> <script>
+        // Build witness: <empty> <sig1> <sig2> <sig3> <script>
         let mut witness = Witness::new();
         witness.push([]);
-        for (_, sig) in sigs.iter().take(2) {
+        for (_, sig) in sigs.iter().take(3) {
             witness.push(sig.serialize());
         }
         witness.push(script.as_bytes());

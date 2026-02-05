@@ -1,8 +1,8 @@
 //! Generates 3 key pairs for 2-of-3 multisig (BIP 48 P2WSH).
 
+use bitcoin::Network;
 use bitcoin::bip32::{DerivationPath, Xpriv, Xpub};
 use bitcoin::secp256k1::Secp256k1;
-use bitcoin::Network;
 use rand::RngCore;
 use serde::Serialize;
 use std::fs;
@@ -23,10 +23,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let path_str = "m/48'/1'/0'/2'";
     let path = DerivationPath::from_str(path_str)?;
 
-    println!("Generating keys for 2-of-3 multisig");
+    println!("Generating keys for 3-of-5 multisig");
     println!("Network: {:?}, Path: {}\n", network, path_str);
 
-    for name in ["key_a", "key_b", "key_c"] {
+    for name in ["key_a", "key_b", "key_c", "key_d", "key_e"] {
         let mut seed = [0u8; 32];
         rand::rngs::OsRng.fill_bytes(&mut seed);
 

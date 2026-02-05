@@ -1,18 +1,24 @@
-//! Creates unsigned PSBTs for 2-of-3 multisig transactions.
+//! Creates unsigned PSBTs for 3-of-5 multisig transactions.
 
-use base64::{engine::general_purpose::STANDARD, Engine};
+use base64::{Engine, engine::general_purpose::STANDARD};
 use bitcoin::bip32::DerivationPath;
 use bitcoin::psbt::Psbt;
 use bitcoin::secp256k1::Secp256k1;
 use bitcoin::{
-    absolute, transaction, Address, Amount, Network, OutPoint, ScriptBuf, Sequence,
-    Transaction, TxIn, TxOut, Txid,
+    Address, Amount, Network, OutPoint, ScriptBuf, Sequence, Transaction, TxIn, TxOut, Txid,
+    absolute, transaction,
 };
-use psbt_coordinator::{print_wallet_info, MultisigWallet};
+use psbt_coordinator::{MultisigWallet, print_wallet_info};
 use std::str::FromStr;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let key_files = ["key_a.json", "key_b.json", "key_c.json"];
+    let key_files = [
+        "key_a.json",
+        "key_b.json",
+        "key_c.json",
+        "key_d.json",
+        "key_e.json",
+    ];
     let network = Network::Regtest;
     let wallet = MultisigWallet::from_key_files(&key_files, network)?;
 
@@ -55,8 +61,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             witness: bitcoin::Witness::new(),
         }],
         output: vec![
-            TxOut { value: send_amt, script_pubkey: dest.script_pubkey() },
-            TxOut { value: change_amt, script_pubkey: change_addr.script_pubkey() },
+            TxOut {
+                value: send_amt,
+                script_pubkey: dest.script_pubkey(),
+            },
+            TxOut {
+                value: change_amt,
+                script_pubkey: change_addr.script_pubkey(),
+            },
         ],
     };
 
@@ -68,8 +80,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for origin in &wallet.xpub_origins {
         let child_path = DerivationPath::from_str(&format!("m/{}", addr_index))?;
         let child_xpub = origin.xpub.derive_pub(&secp, &child_path)?;
-        let full_path = DerivationPath::from_str(&format!("{}/{}", origin.derivation_path, addr_index))?;
-        psbt.inputs[0].bip32_derivation.insert(child_xpub.public_key, (origin.fingerprint, full_path));
+        let full_path =
+            DerivationPath::from_str(&format!("{}/{}", origin.derivation_path, addr_index))?;
+        psbt.inputs[0]
+            .bip32_derivation
+            .insert(child_xpub.public_key, (origin.fingerprint, full_path));
     }
 
     let psbt_b64 = STANDARD.encode(psbt.serialize());
